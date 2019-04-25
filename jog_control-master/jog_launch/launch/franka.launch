@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <arg name="use_fake_joint" default="false"/>
+  <arg name="use_moveit" default="false"/>
+  <arg name="use_rviz" default="true"/>
+  <arg name="use_joy" default="false"/>
+
+  <!-- Launch fake_joint_launch -->
+  <include if="$(arg use_fake_joint)"
+	   file="$(find fake_joint_launch)/launch/ur5.launch">
+    <arg name="use_rviz" value="false"/>
+  </include>
+
+  <!-- Launch MoveIt! -->
+  <include if="$(arg use_moveit)"
+	   file="$(find franka_gazebo)/launch/franka_moveit.launch.launch"/>
+
+  <!-- Launch rviz -->
+  <node if="$(arg use_rviz)"
+	name="rviz" pkg="rviz" type="rviz"
+	args="-d $(find jog_launch)/launch/jog.rviz"/>
+  
+  <rosparam command="load" file="$(find jog_launch)/config/franka.yaml"/>
+  <node name="jog_joint_node" pkg="jog_controller" type="jog_joint_node"/>
+  <node name="jog_frame_node" pkg="jog_controller" type="jog_frame_node">
+    <param name="use_action" value="true"/>
+  </node>
+
+  <!-- Launch joypad -->
+  <include if="$(arg use_joy)" file="$(find jog_controller)/launch/joypad.launch">
+    <arg name="group_name" value="arm"/>
+    <arg name="frame_id" value="panda_link1"/>
+    <arg name="link_name" value="panda_link7"/>
+  </include>
+
+</launch>
